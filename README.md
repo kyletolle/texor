@@ -32,10 +32,10 @@ BSD 2-Clause
 
 ## Credits
 
-Project: https://github.com/snaptoken/kilo-tutorial/
-License (CC BY 4.0) https://creativecommons.org/licenses/by/4.0/
+Project: https://github.com/snaptoken/kilo-tutorial/  
+License: CC BY 4.0, https://creativecommons.org/licenses/by/4.0/
 
-Project: https://github.com/antirez/kilo
-Copyright (c) 2016, Salvatore Sanfilippo <antirez at gmail dot com>
-License (BSD 2-Clause) https://github.com/antirez/kilo/blob/master/LICENSE
+Project: https://github.com/antirez/kilo  
+Copyright (c) 2016, Salvatore Sanfilippo <antirez at gmail dot com>  
+License: BSD 2-Clause, https://github.com/antirez/kilo/blob/master/LICENSE
 
