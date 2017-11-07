@@ -206,7 +206,7 @@ void editorUpdateSyntax(erow *row) {
     char c = row->render[i];
     unsigned char prev_highlight = (i > 0) ? row->highlight[i - 1] : HL_NORMAL;
 
-    if (isdigit(c) && (prev_sep || prev_highlight == HL_NUMBER)) {
+    if ((isdigit(c) && (prev_sep || prev_highlight == HL_NUMBER)) || (c == '.' && prev_highlight == HL_NUMBER)) {
       row->highlight[i] = HL_NUMBER;
       i++;
       prev_sep = 0;
