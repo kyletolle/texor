@@ -104,12 +104,28 @@ char *C_HL_keywords[] = {
   "void|", NULL
 };
 
+char *RUBY_HL_extensions[] = { ".rb", NULL };
+char *RUBY_HL_keywords[] = {
+  "__ENCODING__", "__LINE__", "__FILE__", "BEGIN", "END", "alias", "and",
+  "begin", "break", "case", "class", "def", "defined?", "do", "else", "elsif",
+  "end", "ensure", "false", "for", "if", "in", "module", "next", "nil", "not",
+  "or", "redo", "rescue", "retry", "return", "self", "super", "then", "true",
+  "undef", "unless", "until", "when", "while", "yield", NULL
+};
+
 struct editorSyntax HLDB[] = {
   {
     "c",
     C_HL_extensions,
     C_HL_keywords,
     "//", "/*", "*/",
+    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
+  },
+  {
+    "ruby",
+    RUBY_HL_extensions,
+    RUBY_HL_keywords,
+    "#", "=begin", "=end",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   },
 };
