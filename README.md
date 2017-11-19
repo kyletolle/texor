@@ -40,11 +40,11 @@ Edit an existing file by running `texor` with the filename as a command-line arg
 
 ### Status Bar
 
-A status bar is shown in the second-from-the-bottom row, and uses inverted colors. This tells you the file's name, how many lines it has, and what line your cursor is on.
+A status bar is shown in the second-from-the-bottom row, and uses inverted colors. This tells you the file's name, how many lines it has, the filetype (if detected) and what line your cursor is on.
 
 ### Message Bar
 
-A message bar is shown in the bottom row and initially tells you how to save and quit. As you use the program, it may display other information.
+A message bar is shown in the bottom row and initially tells you how to save, search, and quit. As you use the program, it may display other information.
 
 ### Editing Text
 
@@ -65,6 +65,18 @@ To move around the file more quickly you can use:
 When you have modified a file, you can type `Ctrl-S` to save the file.
 
 Note: If you are saving a new file, it will prompt you for a filename.
+
+### Searching
+
+Type `Ctrl-F` to search.
+
+Type in your search term and the screen will highlight the first match found. Use the arrow keys to go to the next and previous search results.
+
+Type `Enter` to finish searching and leave your cursor on that search result or `Esc` to cancel and return your cursor to where it was before the search.
+
+### Syntax Highlighting
+
+Syntax highlighting colors strings, numbers, keywords, and comments for files in both the C and Ruby programming languages.
 
 ### Quitting
 
