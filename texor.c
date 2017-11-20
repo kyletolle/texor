@@ -76,7 +76,7 @@ typedef struct erow {
 
 struct editorConfig {
   int file_position_x, file_position_y;
-  int rx;
+  int screen_position_x;
   int rowoff;
   int coloff;
   int screenrows;
@@ -412,25 +412,25 @@ void editorSelectSyntaxHighlight() {
 /*** row operations ***/
 
 int editorRowFilePositionXToScreenPositionX(erow *row, int file_position_x) {
-  int rx = 0;
+  int screen_position_x = 0;
   int j;
   for (j = 0; j < file_position_x; j++) {
     if (row->chars[j] == '\t')
-      rx += (TEXOR_TAB_STOP - 1) - (rx % TEXOR_TAB_STOP);
-    rx++;
+      screen_position_x += (TEXOR_TAB_STOP - 1) - (screen_position_x % TEXOR_TAB_STOP);
+    screen_position_x++;
   }
-  return rx;
+  return screen_position_x;
 }
 
-int editorRowScreenPositionXToFilePositionX(erow *row, int rx) {
-  int cur_rx = 0;
+int editorRowScreenPositionXToFilePositionX(erow *row, int screen_position_x) {
+  int cur_screen_position_x = 0;
   int file_position_x;
   for (file_position_x = 0; file_position_x < row->size; file_position_x++) {
     if (row->chars[file_position_x] == '\t')
-      cur_rx += (TEXOR_TAB_STOP - 1) - (cur_rx % TEXOR_TAB_STOP);
-    cur_rx++;
+      cur_screen_position_x += (TEXOR_TAB_STOP - 1) - (cur_screen_position_x % TEXOR_TAB_STOP);
+    cur_screen_position_x++;
 
-    if (cur_rx > rx) return file_position_x;
+    if (cur_screen_position_x > screen_position_x) return file_position_x;
   }
   return file_position_x;
 }
@@ -738,9 +738,9 @@ void abFree(struct abuf *ab) {
 /*** output ***/
 
 void editorScroll() {
-  E.rx = 0;
+  E.screen_position_x = 0;
   if (E.file_position_y < E.numrows) {
-    E.rx = editorRowFilePositionXToScreenPositionX(&E.row[E.file_position_y], E.file_position_x);
+    E.screen_position_x = editorRowFilePositionXToScreenPositionX(&E.row[E.file_position_y], E.file_position_x);
   }
 
   if (E.file_position_y < E.rowoff) {
@@ -749,11 +749,11 @@ void editorScroll() {
   if (E.file_position_y >= E.rowoff + E.screenrows) {
     E.rowoff = E.file_position_y - E.screenrows + 1;
   }
-  if (E.rx < E.coloff) {
-    E.coloff = E.rx;
+  if (E.screen_position_x < E.coloff) {
+    E.coloff = E.screen_position_x;
   }
-  if (E.rx >= E.coloff + E.screencols) {
-    E.coloff = E.rx - E.screencols + 1;
+  if (E.screen_position_x >= E.coloff + E.screencols) {
+    E.coloff = E.screen_position_x - E.screencols + 1;
   }
 }
 
@@ -868,7 +868,7 @@ void editorRefreshScreen() {
 
   char buf[32];
   snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.file_position_y - E.rowoff) + 1,
-                                            (E.rx - E.coloff) + 1);
+                                            (E.screen_position_x - E.coloff) + 1);
   abAppend(&ab, buf, strlen(buf));
 
   abAppend(&ab, "\x1b[?25h", 6);
@@ -1050,7 +1050,7 @@ void editorProcessKeypress() {
 void initEditor() {
   E.file_position_x = 0;
   E.file_position_y = 0;
-  E.rx = 0;
+  E.screen_position_x = 0;
   E.rowoff = 0;
   E.coloff = 0;
   E.numrows = 0;
