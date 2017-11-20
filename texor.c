@@ -75,7 +75,7 @@ typedef struct erow {
 } erow;
 
 struct editorConfig {
-  int file_position_x, cy;
+  int file_position_x, file_position_y;
   int rx;
   int rowoff;
   int coloff;
@@ -519,10 +519,10 @@ void editorRowDelChar(erow *row, int at) {
 /*** editor operations ***/
 
 void editorInsertChar(int c) {
-  if (E.cy == E.numrows) {
+  if (E.file_position_y == E.numrows) {
     editorInsertRow(E.numrows, "", 0);
   }
-  editorRowInsertChar(&E.row[E.cy], E.file_position_x, c);
+  editorRowInsertChar(&E.row[E.file_position_y], E.file_position_x, c);
   E.file_position_x++;
 }
 
@@ -537,32 +537,32 @@ void editorRowAppendString(erow *row, char *s, size_t len) {
 
 void editorInsertNewline() {
   if (E.file_position_x == 0) {
-    editorInsertRow(E.cy, "", 0);
+    editorInsertRow(E.file_position_y, "", 0);
   } else {
-    erow *row = &E.row[E.cy];
-    editorInsertRow(E.cy + 1, &row->chars[E.file_position_x], row->size - E.file_position_x);
-    row = &E.row[E.cy];
+    erow *row = &E.row[E.file_position_y];
+    editorInsertRow(E.file_position_y + 1, &row->chars[E.file_position_x], row->size - E.file_position_x);
+    row = &E.row[E.file_position_y];
     row->size = E.file_position_x;
     row->chars[row->size] = '\0';
     editorUpdateRow(row);
   }
-  E.cy++;
+  E.file_position_y++;
   E.file_position_x = 0;
 }
 
 void editorDelChar() {
-  if (E.cy == E.numrows) return;
-  if (E.file_position_x == 0 && E.cy == 0) return;
+  if (E.file_position_y == E.numrows) return;
+  if (E.file_position_x == 0 && E.file_position_y == 0) return;
 
-  erow *row = &E.row[E.cy];
+  erow *row = &E.row[E.file_position_y];
   if (E.file_position_x > 0) {
     editorRowDelChar(row, E.file_position_x - 1);
     E.file_position_x--;
   } else {
-    E.file_position_x = E.row[E.cy - 1].size;
-    editorRowAppendString(&E.row[E.cy - 1], row->chars, row->size);
-    editorDelRow(E.cy);
-    E.cy--;
+    E.file_position_x = E.row[E.file_position_y - 1].size;
+    editorRowAppendString(&E.row[E.file_position_y - 1], row->chars, row->size);
+    editorDelRow(E.file_position_y);
+    E.file_position_y--;
   }
 }
 
@@ -680,7 +680,7 @@ void editorFindCallback(char *query, int key) {
     char *match = strstr(row->render, query);
     if (match) {
       last_match = current;
-      E.cy = current;
+      E.file_position_y = current;
       E.file_position_x = editorRowScreenPositionXToFilePositionX(row, match - row->render);
       E.rowoff = E.numrows;
 
@@ -695,7 +695,7 @@ void editorFindCallback(char *query, int key) {
 
 void editorFind() {
   int saved_file_position_x = E.file_position_x;
-  int saved_cy = E.cy;
+  int saved_file_position_y = E.file_position_y;
   int saved_coloff = E.coloff;
   int saved_rowoff = E.rowoff;
 
@@ -706,7 +706,7 @@ void editorFind() {
     free(query);
   } else {
     E.file_position_x = saved_file_position_x;
-    E.cy = saved_cy;
+    E.file_position_y = saved_file_position_y;
     E.coloff = saved_coloff;
     E.rowoff = saved_rowoff;
   }
@@ -739,15 +739,15 @@ void abFree(struct abuf *ab) {
 
 void editorScroll() {
   E.rx = 0;
-  if (E.cy < E.numrows) {
-    E.rx = editorRowFilePositionXToScreenPositionX(&E.row[E.cy], E.file_position_x);
+  if (E.file_position_y < E.numrows) {
+    E.rx = editorRowFilePositionXToScreenPositionX(&E.row[E.file_position_y], E.file_position_x);
   }
 
-  if (E.cy < E.rowoff) {
-    E.rowoff = E.cy;
+  if (E.file_position_y < E.rowoff) {
+    E.rowoff = E.file_position_y;
   }
-  if (E.cy >= E.rowoff + E.screenrows) {
-    E.rowoff = E.cy - E.screenrows + 1;
+  if (E.file_position_y >= E.rowoff + E.screenrows) {
+    E.rowoff = E.file_position_y - E.screenrows + 1;
   }
   if (E.rx < E.coloff) {
     E.coloff = E.rx;
@@ -830,7 +830,7 @@ void editorDrawStatusBar(struct abuf *ab) {
       E.dirty ? "(modified)" : "");
   int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d/%d",
       E.syntax ? E.syntax->filetype : "no ft",
-      E.cy + 1, E.numrows);
+      E.file_position_y + 1, E.numrows);
   if (len > E.screencols) len = E.screencols;
   abAppend(ab, status, len);
   while (len < E.screencols) {
@@ -867,7 +867,7 @@ void editorRefreshScreen() {
   editorDrawMessageBar(&ab);
 
   char buf[32];
-  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1,
+  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.file_position_y - E.rowoff) + 1,
                                             (E.rx - E.coloff) + 1);
   abAppend(&ab, buf, strlen(buf));
 
@@ -926,38 +926,38 @@ char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
 }
 
 void editorMoveCursor(int key) {
-  erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+  erow *row = (E.file_position_y >= E.numrows) ? NULL : &E.row[E.file_position_y];
 
   switch (key) {
     case ARROW_LEFT:
       if (E.file_position_x != 0) {
         E.file_position_x--;
-      } else if (E.cy > 0) {
-        E.cy--;
-        E.file_position_x = E.row[E.cy].size;
+      } else if (E.file_position_y > 0) {
+        E.file_position_y--;
+        E.file_position_x = E.row[E.file_position_y].size;
       }
       break;
     case ARROW_RIGHT:
       if (row && E.file_position_x < row->size) {
         E.file_position_x++;
       } else if (row && E.file_position_x == row->size) {
-        E.cy++;
+        E.file_position_y++;
         E.file_position_x = 0;
       }
       break;
     case ARROW_UP:
-      if (E.cy != 0) {
-        E.cy--;
+      if (E.file_position_y != 0) {
+        E.file_position_y--;
       }
       break;
     case ARROW_DOWN:
-      if (E.cy < E.numrows) {
-        E.cy++;
+      if (E.file_position_y < E.numrows) {
+        E.file_position_y++;
       }
       break;
   }
 
-  row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+  row = (E.file_position_y >= E.numrows) ? NULL : &E.row[E.file_position_y];
   int rowlen = row ? row->size : 0;
   if (E.file_position_x > rowlen) {
     E.file_position_x = rowlen;
@@ -995,8 +995,8 @@ void editorProcessKeypress() {
       break;
 
     case END_KEY:
-      if (E.cy < E.numrows)
-        E.file_position_x = E.row[E.cy].size;
+      if (E.file_position_y < E.numrows)
+        E.file_position_x = E.row[E.file_position_y].size;
       break;
 
     case CTRL_KEY('f'):
@@ -1014,10 +1014,10 @@ void editorProcessKeypress() {
     case PAGE_DOWN:
       {
         if (c == PAGE_UP) {
-          E.cy = E.rowoff;
+          E.file_position_y = E.rowoff;
         } else if (c == PAGE_DOWN) {
-          E.cy = E.rowoff + E.screenrows - 1;
-          if (E.cy > E.numrows) E.cy = E.numrows;
+          E.file_position_y = E.rowoff + E.screenrows - 1;
+          if (E.file_position_y > E.numrows) E.file_position_y = E.numrows;
         }
 
         int times = E.screenrows;
@@ -1049,7 +1049,7 @@ void editorProcessKeypress() {
 
 void initEditor() {
   E.file_position_x = 0;
-  E.cy = 0;
+  E.file_position_y = 0;
   E.rx = 0;
   E.rowoff = 0;
   E.coloff = 0;
