@@ -85,7 +85,7 @@ struct editorConfig {
   erow *row;
   int dirty;
   char *filename;
-  char statusmsg[80];
+  char status_message[80];
   time_t statusmsg_time;
   struct editorSyntax *syntax;
   struct termios orig_termios;
@@ -848,10 +848,10 @@ void editorDrawStatusBar(struct abuf *ab) {
 
 void editorDrawMessageBar(struct abuf *ab) {
   abAppend(ab, "\x1b[K", 3);
-  int msglen = strlen(E.statusmsg);
+  int msglen = strlen(E.status_message);
   if (msglen > E.screen_columns) msglen = E.screen_columns;
   if (msglen && time(NULL) - E.statusmsg_time < 5)
-    abAppend(ab, E.statusmsg, msglen);
+    abAppend(ab, E.status_message, msglen);
 }
 
 void editorRefreshScreen() {
@@ -880,7 +880,7 @@ void editorRefreshScreen() {
 void editorSetStatusMessage(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
-  vsnprintf(E.statusmsg, sizeof(E.statusmsg), fmt, ap);
+  vsnprintf(E.status_message, sizeof(E.status_message), fmt, ap);
   va_end(ap);
   E.statusmsg_time = time(NULL);
 }
@@ -1057,7 +1057,7 @@ void initEditor() {
   E.row = NULL;
   E.dirty = 0;
   E.filename = NULL;
-  E.statusmsg[0] = '\0';
+  E.status_message[0] = '\0';
   E.statusmsg_time = 0;
   E.syntax = NULL;
 
