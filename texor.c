@@ -77,7 +77,7 @@ typedef struct erow {
 struct editorConfig {
   int file_position_x, file_position_y;
   int screen_position_x;
-  int rowoff;
+  int row_offset;
   int coloff;
   int screenrows;
   int screencols;
@@ -682,7 +682,7 @@ void editorFindCallback(char *query, int key) {
       last_match = current;
       E.file_position_y = current;
       E.file_position_x = editorRowScreenPositionXToFilePositionX(row, match - row->render);
-      E.rowoff = E.numrows;
+      E.row_offset = E.numrows;
 
       saved_highlight_line = current;
       saved_highlight = malloc(row->rsize);
@@ -697,7 +697,7 @@ void editorFind() {
   int saved_file_position_x = E.file_position_x;
   int saved_file_position_y = E.file_position_y;
   int saved_coloff = E.coloff;
-  int saved_rowoff = E.rowoff;
+  int saved_rowoff = E.row_offset;
 
   char *query = editorPrompt("Search, %s (ESC/Arrows/Enter)",
                              editorFindCallback);
@@ -708,7 +708,7 @@ void editorFind() {
     E.file_position_x = saved_file_position_x;
     E.file_position_y = saved_file_position_y;
     E.coloff = saved_coloff;
-    E.rowoff = saved_rowoff;
+    E.row_offset = saved_rowoff;
   }
 }
 
@@ -743,11 +743,11 @@ void editorScroll() {
     E.screen_position_x = editorRowFilePositionXToScreenPositionX(&E.row[E.file_position_y], E.file_position_x);
   }
 
-  if (E.file_position_y < E.rowoff) {
-    E.rowoff = E.file_position_y;
+  if (E.file_position_y < E.row_offset) {
+    E.row_offset = E.file_position_y;
   }
-  if (E.file_position_y >= E.rowoff + E.screenrows) {
-    E.rowoff = E.file_position_y - E.screenrows + 1;
+  if (E.file_position_y >= E.row_offset + E.screenrows) {
+    E.row_offset = E.file_position_y - E.screenrows + 1;
   }
   if (E.screen_position_x < E.coloff) {
     E.coloff = E.screen_position_x;
@@ -760,7 +760,7 @@ void editorScroll() {
 void editorDrawRows(struct abuf *ab) {
   int y;
   for (y = 0; y < E.screenrows; y++) {
-    int filerow = y + E.rowoff;
+    int filerow = y + E.row_offset;
     if (filerow >= E.numrows ) {
       if (E.numrows == 0 && y == E.screenrows / 3) {
         char welcome[80];
@@ -867,7 +867,7 @@ void editorRefreshScreen() {
   editorDrawMessageBar(&ab);
 
   char buf[32];
-  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.file_position_y - E.rowoff) + 1,
+  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.file_position_y - E.row_offset) + 1,
                                             (E.screen_position_x - E.coloff) + 1);
   abAppend(&ab, buf, strlen(buf));
 
@@ -1014,9 +1014,9 @@ void editorProcessKeypress() {
     case PAGE_DOWN:
       {
         if (c == PAGE_UP) {
-          E.file_position_y = E.rowoff;
+          E.file_position_y = E.row_offset;
         } else if (c == PAGE_DOWN) {
-          E.file_position_y = E.rowoff + E.screenrows - 1;
+          E.file_position_y = E.row_offset + E.screenrows - 1;
           if (E.file_position_y > E.numrows) E.file_position_y = E.numrows;
         }
 
@@ -1051,7 +1051,7 @@ void initEditor() {
   E.file_position_x = 0;
   E.file_position_y = 0;
   E.screen_position_x = 0;
-  E.rowoff = 0;
+  E.row_offset = 0;
   E.coloff = 0;
   E.numrows = 0;
   E.row = NULL;
