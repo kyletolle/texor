@@ -67,7 +67,7 @@ struct editorSyntax {
 typedef struct erow {
   int idx;
   int size;
-  int render_size;
+  int rendered_size;
   char *characters;
   char *rendered_characters;
   unsigned char *highlight;
@@ -256,8 +256,8 @@ int is_separator(int c) {
 }
 
 void editorUpdateSyntax(erow *row) {
-  row->highlight = realloc(row->highlight, row->render_size);
-  memset(row->highlight, HL_NORMAL, row->render_size);
+  row->highlight = realloc(row->highlight, row->rendered_size);
+  memset(row->highlight, HL_NORMAL, row->rendered_size);
 
   if (E.syntax == NULL) return;
 
@@ -276,13 +276,13 @@ void editorUpdateSyntax(erow *row) {
   int in_comment = (row->idx > 0 && E.row[row->idx - 1].highlight_open_comment);
 
   int i = 0;
-  while (i < row->render_size) {
+  while (i < row->rendered_size) {
     char c = row->rendered_characters[i];
     unsigned char prev_highlight = (i > 0) ? row->highlight[i - 1] : HL_NORMAL;
 
     if (scs_len && !in_string && !in_comment) {
       if (!strncmp(&row->rendered_characters[i], scs, scs_len)) {
-        memset(&row->highlight[i], HL_COMMENT, row->render_size - i);
+        memset(&row->highlight[i], HL_COMMENT, row->rendered_size - i);
         break;
       }
     }
@@ -311,7 +311,7 @@ void editorUpdateSyntax(erow *row) {
     if (E.syntax->flags & HL_HIGHLIGHT_STRINGS) {
       if (in_string) {
         row->highlight[i] = HL_STRING;
-        if (c == '\\' && i + 1 < row->render_size) {
+        if (c == '\\' && i + 1 < row->rendered_size) {
           row->highlight[i + 1] = HL_STRING;
           i += 2;
           continue;
@@ -454,7 +454,7 @@ void editorUpdateRow(erow *row) {
     }
   }
   row->rendered_characters[idx] = '\0';
-  row->render_size = idx;
+  row->rendered_size = idx;
 
   editorUpdateSyntax(row);
 }
@@ -473,7 +473,7 @@ void editorInsertRow(int at, char *s, size_t len) {
   memcpy(E.row[at].characters, s, len);
   E.row[at].characters[len] = '\0';
 
-  E.row[at].render_size = 0;
+  E.row[at].rendered_size = 0;
   E.row[at].rendered_characters = NULL;
   E.row[at].highlight = NULL;
   E.row[at].highlight_open_comment = 0;
@@ -651,7 +651,7 @@ void editorFindCallback(char *query, int key) {
   static char *saved_highlight = NULL;
 
   if (saved_highlight) {
-    memcpy(E.row[saved_highlight_line].highlight, saved_highlight, E.row[saved_highlight_line].render_size);
+    memcpy(E.row[saved_highlight_line].highlight, saved_highlight, E.row[saved_highlight_line].rendered_size);
     saved_highlight = NULL;
   }
 
@@ -685,8 +685,8 @@ void editorFindCallback(char *query, int key) {
       E.row_offset = E.number_of_rows;
 
       saved_highlight_line = current;
-      saved_highlight = malloc(row->render_size);
-      memcpy(saved_highlight, row->highlight, row->render_size);
+      saved_highlight = malloc(row->rendered_size);
+      memcpy(saved_highlight, row->highlight, row->rendered_size);
       memset(&row->highlight[match - row->rendered_characters], HL_MATCH, strlen(query));
       break;
     }
@@ -779,7 +779,7 @@ void editorDrawRows(struct abuf *ab) {
         abAppend(ab, "~", 1);
       }
     } else {
-      int len = E.row[filerow].render_size - E.column_offset;
+      int len = E.row[filerow].rendered_size - E.column_offset;
       if (len < 0) len = 0;
       if (len > E.screen_columns) len = E.screen_columns;
       char *c = &E.row[filerow].rendered_characters[E.column_offset];
