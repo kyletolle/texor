@@ -263,13 +263,13 @@ void editorUpdateSyntax(erow *row) {
 
   char **keywords = E.syntax->keywords;
 
-  char *scs = E.syntax->singleline_comment_start;
-  char *mcs = E.syntax->multiline_comment_start;
-  char *mce = E.syntax->multiline_comment_end;
+  char *singleline_comment_start = E.syntax->singleline_comment_start;
+  char *multiline_comment_start = E.syntax->multiline_comment_start;
+  char *multiline_comment_end = E.syntax->multiline_comment_end;
 
-  int scs_len = scs ? strlen(scs) : 0;
-  int mcs_len = mcs ? strlen(mcs) : 0;
-  int mce_len = mce ? strlen(mce) : 0;
+  int scs_len = singleline_comment_start ? strlen(singleline_comment_start) : 0;
+  int mcs_len = multiline_comment_start ? strlen(multiline_comment_start) : 0;
+  int mce_len = multiline_comment_end ? strlen(multiline_comment_end) : 0;
 
   int prev_sep = 1;
   int in_string = 0;
@@ -281,7 +281,7 @@ void editorUpdateSyntax(erow *row) {
     unsigned char prev_highlight = (i > 0) ? row->highlight[i - 1] : HL_NORMAL;
 
     if (scs_len && !in_string && !in_comment) {
-      if (!strncmp(&row->rendered_characters[i], scs, scs_len)) {
+      if (!strncmp(&row->rendered_characters[i], singleline_comment_start, scs_len)) {
         memset(&row->highlight[i], HL_COMMENT, row->rendered_size - i);
         break;
       }
@@ -290,7 +290,7 @@ void editorUpdateSyntax(erow *row) {
     if (mcs_len && mce_len && !in_string) {
       if (in_comment) {
         row->highlight[i] = HL_MLCOMMENT;
-        if (!strncmp(&row->rendered_characters[i], mce, mce_len)) {
+        if (!strncmp(&row->rendered_characters[i], multiline_comment_end, mce_len)) {
           memset(&row->highlight[i], HL_MLCOMMENT, mce_len);
           i += mce_len;
           in_comment = 0;
@@ -300,7 +300,7 @@ void editorUpdateSyntax(erow *row) {
           i++;
           continue;
         }
-      } else if (!strncmp(&row->rendered_characters[i], mcs, mcs_len)) {
+      } else if (!strncmp(&row->rendered_characters[i], multiline_comment_start, mcs_len)) {
         memset(&row->highlight[i], HL_MLCOMMENT, mcs_len);
         i += mcs_len;
         in_comment = 1;
