@@ -78,7 +78,7 @@ struct editorConfig {
   int file_position_x, file_position_y;
   int screen_position_x;
   int row_offset;
-  int coloff;
+  int column_offset;
   int screenrows;
   int screencols;
   int numrows;
@@ -696,7 +696,7 @@ void editorFindCallback(char *query, int key) {
 void editorFind() {
   int saved_file_position_x = E.file_position_x;
   int saved_file_position_y = E.file_position_y;
-  int saved_coloff = E.coloff;
+  int saved_coloff = E.column_offset;
   int saved_rowoff = E.row_offset;
 
   char *query = editorPrompt("Search, %s (ESC/Arrows/Enter)",
@@ -707,7 +707,7 @@ void editorFind() {
   } else {
     E.file_position_x = saved_file_position_x;
     E.file_position_y = saved_file_position_y;
-    E.coloff = saved_coloff;
+    E.column_offset = saved_coloff;
     E.row_offset = saved_rowoff;
   }
 }
@@ -749,11 +749,11 @@ void editorScroll() {
   if (E.file_position_y >= E.row_offset + E.screenrows) {
     E.row_offset = E.file_position_y - E.screenrows + 1;
   }
-  if (E.screen_position_x < E.coloff) {
-    E.coloff = E.screen_position_x;
+  if (E.screen_position_x < E.column_offset) {
+    E.column_offset = E.screen_position_x;
   }
-  if (E.screen_position_x >= E.coloff + E.screencols) {
-    E.coloff = E.screen_position_x - E.screencols + 1;
+  if (E.screen_position_x >= E.column_offset + E.screencols) {
+    E.column_offset = E.screen_position_x - E.screencols + 1;
   }
 }
 
@@ -779,11 +779,11 @@ void editorDrawRows(struct abuf *ab) {
         abAppend(ab, "~", 1);
       }
     } else {
-      int len = E.row[filerow].rsize - E.coloff;
+      int len = E.row[filerow].rsize - E.column_offset;
       if (len < 0) len = 0;
       if (len > E.screencols) len = E.screencols;
-      char *c = &E.row[filerow].render[E.coloff];
-      unsigned char *highlight = &E.row[filerow].highlight[E.coloff];
+      char *c = &E.row[filerow].render[E.column_offset];
+      unsigned char *highlight = &E.row[filerow].highlight[E.column_offset];
       int current_color = -1;
       int j;
       for (j = 0; j < len; j++) {
@@ -868,7 +868,7 @@ void editorRefreshScreen() {
 
   char buf[32];
   snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.file_position_y - E.row_offset) + 1,
-                                            (E.screen_position_x - E.coloff) + 1);
+                                            (E.screen_position_x - E.column_offset) + 1);
   abAppend(&ab, buf, strlen(buf));
 
   abAppend(&ab, "\x1b[?25h", 6);
@@ -1052,7 +1052,7 @@ void initEditor() {
   E.file_position_y = 0;
   E.screen_position_x = 0;
   E.row_offset = 0;
-  E.coloff = 0;
+  E.column_offset = 0;
   E.numrows = 0;
   E.row = NULL;
   E.dirty = 0;
