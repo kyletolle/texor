@@ -55,7 +55,7 @@ enum editorHighlight {
 /*** data ***/
 
 struct editorSyntax {
-  char *filetype;
+  char *file_type;
   char **filematch;
   char **keywords;
   char *singleline_comment_start;
@@ -829,7 +829,7 @@ void editorDrawStatusBar(struct abuf *ab) {
       E.filename ? E.filename : "[No Name]", E.number_of_rows,
       E.dirty ? "(modified)" : "");
   int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d/%d",
-      E.syntax ? E.syntax->filetype : "no ft",
+      E.syntax ? E.syntax->file_type : "no ft",
       E.file_position_y + 1, E.number_of_rows);
   if (len > E.screen_columns) len = E.screen_columns;
   abAppend(ab, status, len);
