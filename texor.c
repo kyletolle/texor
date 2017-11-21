@@ -267,9 +267,9 @@ void editorUpdateSyntax(erow *row) {
   char *multiline_comment_start = E.syntax->multiline_comment_start;
   char *multiline_comment_end = E.syntax->multiline_comment_end;
 
-  int scs_len = singleline_comment_start ? strlen(singleline_comment_start) : 0;
-  int mcs_len = multiline_comment_start ? strlen(multiline_comment_start) : 0;
-  int mce_len = multiline_comment_end ? strlen(multiline_comment_end) : 0;
+  int singleline_comment_start_length = singleline_comment_start ? strlen(singleline_comment_start) : 0;
+  int multiline_comment_start_length = multiline_comment_start ? strlen(multiline_comment_start) : 0;
+  int multiline_comment_end_length = multiline_comment_end ? strlen(multiline_comment_end) : 0;
 
   int prev_sep = 1;
   int in_string = 0;
@@ -280,19 +280,19 @@ void editorUpdateSyntax(erow *row) {
     char c = row->rendered_characters[i];
     unsigned char prev_highlight = (i > 0) ? row->highlight[i - 1] : HL_NORMAL;
 
-    if (scs_len && !in_string && !in_comment) {
-      if (!strncmp(&row->rendered_characters[i], singleline_comment_start, scs_len)) {
+    if (singleline_comment_start_length && !in_string && !in_comment) {
+      if (!strncmp(&row->rendered_characters[i], singleline_comment_start, singleline_comment_start_length)) {
         memset(&row->highlight[i], HL_COMMENT, row->rendered_size - i);
         break;
       }
     }
 
-    if (mcs_len && mce_len && !in_string) {
+    if (multiline_comment_start_length && multiline_comment_end_length && !in_string) {
       if (in_comment) {
         row->highlight[i] = HL_MLCOMMENT;
-        if (!strncmp(&row->rendered_characters[i], multiline_comment_end, mce_len)) {
-          memset(&row->highlight[i], HL_MLCOMMENT, mce_len);
-          i += mce_len;
+        if (!strncmp(&row->rendered_characters[i], multiline_comment_end, multiline_comment_end_length)) {
+          memset(&row->highlight[i], HL_MLCOMMENT, multiline_comment_end_length);
+          i += multiline_comment_end_length;
           in_comment = 0;
           prev_sep = 1;
           continue;
@@ -300,9 +300,9 @@ void editorUpdateSyntax(erow *row) {
           i++;
           continue;
         }
-      } else if (!strncmp(&row->rendered_characters[i], multiline_comment_start, mcs_len)) {
-        memset(&row->highlight[i], HL_MLCOMMENT, mcs_len);
-        i += mcs_len;
+      } else if (!strncmp(&row->rendered_characters[i], multiline_comment_start, multiline_comment_start_length)) {
+        memset(&row->highlight[i], HL_MLCOMMENT, multiline_comment_start_length);
+        i += multiline_comment_start_length;
         in_comment = 1;
         continue;
       }
