@@ -68,7 +68,7 @@ typedef struct erow {
   int idx;
   int size;
   int render_size;
-  char *chars;
+  char *characters;
   char *render;
   unsigned char *highlight;
   int highlight_open_comment;
@@ -415,7 +415,7 @@ int editorRowFilePositionXToScreenPositionX(erow *row, int file_position_x) {
   int screen_position_x = 0;
   int j;
   for (j = 0; j < file_position_x; j++) {
-    if (row->chars[j] == '\t')
+    if (row->characters[j] == '\t')
       screen_position_x += (TEXOR_TAB_STOP - 1) - (screen_position_x % TEXOR_TAB_STOP);
     screen_position_x++;
   }
@@ -426,7 +426,7 @@ int editorRowScreenPositionXToFilePositionX(erow *row, int screen_position_x) {
   int cur_screen_position_x = 0;
   int file_position_x;
   for (file_position_x = 0; file_position_x < row->size; file_position_x++) {
-    if (row->chars[file_position_x] == '\t')
+    if (row->characters[file_position_x] == '\t')
       cur_screen_position_x += (TEXOR_TAB_STOP - 1) - (cur_screen_position_x % TEXOR_TAB_STOP);
     cur_screen_position_x++;
 
@@ -439,18 +439,18 @@ void editorUpdateRow(erow *row) {
   int tabs = 0;
   int j;
   for (j = 0; j < row->size; j++)
-    if (row->chars[j] == '\t') tabs++;
+    if (row->characters[j] == '\t') tabs++;
 
   free(row->render);
   row->render = malloc(row->size + tabs*(TEXOR_TAB_STOP - 1) + 1);
 
   int idx = 0;
   for (j = 0; j < row->size; j++) {
-    if (row->chars[j] == '\t') {
+    if (row->characters[j] == '\t') {
       row->render[idx++] = ' ';
       while (idx % TEXOR_TAB_STOP != 0) row->render[idx++] = ' ';
     } else {
-      row->render[idx++] = row->chars[j];
+      row->render[idx++] = row->characters[j];
     }
   }
   row->render[idx] = '\0';
@@ -469,9 +469,9 @@ void editorInsertRow(int at, char *s, size_t len) {
   E.row[at].idx = at;
 
   E.row[at].size = len;
-  E.row[at].chars = malloc(len + 1);
-  memcpy(E.row[at].chars, s, len);
-  E.row[at].chars[len] = '\0';
+  E.row[at].characters = malloc(len + 1);
+  memcpy(E.row[at].characters, s, len);
+  E.row[at].characters[len] = '\0';
 
   E.row[at].render_size = 0;
   E.row[at].render = NULL;
@@ -485,7 +485,7 @@ void editorInsertRow(int at, char *s, size_t len) {
 
 void editorFreeRow(erow *row) {
   free(row->render);
-  free(row->chars);
+  free(row->characters);
   free(row->highlight);
 }
 
@@ -500,17 +500,17 @@ void editorDelRow(int at) {
 
 void editorRowInsertChar(erow *row, int at, int c) {
   if (at < 0 || at > row->size) at = row->size;
-  row->chars = realloc(row->chars, row->size + 2);
-  memmove(&row->chars[at + 1], &row->chars[at], row->size - at + 1);
+  row->characters = realloc(row->characters, row->size + 2);
+  memmove(&row->characters[at + 1], &row->characters[at], row->size - at + 1);
   row->size++;
-  row->chars[at] = c;
+  row->characters[at] = c;
   editorUpdateRow(row);
   E.dirty++;
 }
 
 void editorRowDelChar(erow *row, int at) {
   if (at < 0 || at >= row->size) return;
-  memmove(&row->chars[at], &row->chars[at + 1], row->size - at);
+  memmove(&row->characters[at], &row->characters[at + 1], row->size - at);
   row->size--;
   editorUpdateRow(row);
   E.dirty++;
@@ -527,10 +527,10 @@ void editorInsertChar(int c) {
 }
 
 void editorRowAppendString(erow *row, char *s, size_t len) {
-  row->chars = realloc(row->chars, row->size + len + 1);
-  memcpy(&row->chars[row->size], s, len);
+  row->characters = realloc(row->characters, row->size + len + 1);
+  memcpy(&row->characters[row->size], s, len);
   row->size += len;
-  row->chars[row->size] = '\0';
+  row->characters[row->size] = '\0';
   editorUpdateRow(row);
   E.dirty++;
 }
@@ -540,10 +540,10 @@ void editorInsertNewline() {
     editorInsertRow(E.file_position_y, "", 0);
   } else {
     erow *row = &E.row[E.file_position_y];
-    editorInsertRow(E.file_position_y + 1, &row->chars[E.file_position_x], row->size - E.file_position_x);
+    editorInsertRow(E.file_position_y + 1, &row->characters[E.file_position_x], row->size - E.file_position_x);
     row = &E.row[E.file_position_y];
     row->size = E.file_position_x;
-    row->chars[row->size] = '\0';
+    row->characters[row->size] = '\0';
     editorUpdateRow(row);
   }
   E.file_position_y++;
@@ -560,7 +560,7 @@ void editorDelChar() {
     E.file_position_x--;
   } else {
     E.file_position_x = E.row[E.file_position_y - 1].size;
-    editorRowAppendString(&E.row[E.file_position_y - 1], row->chars, row->size);
+    editorRowAppendString(&E.row[E.file_position_y - 1], row->characters, row->size);
     editorDelRow(E.file_position_y);
     E.file_position_y--;
   }
@@ -578,7 +578,7 @@ char *editorRowsToString(int *buflen) {
   char *buf = malloc(totlen);
   char *p = buf;
   for (j = 0; j < E.number_of_rows; j++) {
-    memcpy(p, E.row[j].chars, E.row[j].size);
+    memcpy(p, E.row[j].characters, E.row[j].size);
     p += E.row[j].size;
     *p = '\n';
     p++;
