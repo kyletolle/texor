@@ -65,7 +65,7 @@ struct editorSyntax {
 };
 
 typedef struct erow {
-  int idx;
+  int index;
   int size;
   int rendered_size;
   char *characters;
@@ -273,7 +273,7 @@ void editorUpdateSyntax(erow *row) {
 
   int previous_separator = 1;
   int in_string = 0;
-  int in_comment = (row->idx > 0 && E.row[row->idx - 1].highlight_open_comment);
+  int in_comment = (row->index > 0 && E.row[row->index - 1].highlight_open_comment);
 
   int i = 0;
   while (i < row->rendered_size) {
@@ -365,8 +365,8 @@ void editorUpdateSyntax(erow *row) {
 
   int changed = (row->highlight_open_comment != in_comment);
   row->highlight_open_comment = in_comment;
-  if (changed && row->idx + 1 < E.number_of_rows)
-    editorUpdateSyntax(&E.row[row->idx + 1]);
+  if (changed && row->index + 1 < E.number_of_rows)
+    editorUpdateSyntax(&E.row[row->index + 1]);
 }
 
 int editorSyntaxToColor(int hl) {
@@ -444,17 +444,17 @@ void editorUpdateRow(erow *row) {
   free(row->rendered_characters);
   row->rendered_characters = malloc(row->size + tabs*(TEXOR_TAB_STOP - 1) + 1);
 
-  int idx = 0;
+  int index = 0;
   for (j = 0; j < row->size; j++) {
     if (row->characters[j] == '\t') {
-      row->rendered_characters[idx++] = ' ';
-      while (idx % TEXOR_TAB_STOP != 0) row->rendered_characters[idx++] = ' ';
+      row->rendered_characters[index++] = ' ';
+      while (index % TEXOR_TAB_STOP != 0) row->rendered_characters[index++] = ' ';
     } else {
-      row->rendered_characters[idx++] = row->characters[j];
+      row->rendered_characters[index++] = row->characters[j];
     }
   }
-  row->rendered_characters[idx] = '\0';
-  row->rendered_size = idx;
+  row->rendered_characters[index] = '\0';
+  row->rendered_size = index;
 
   editorUpdateSyntax(row);
 }
@@ -464,9 +464,9 @@ void editorInsertRow(int at, char *s, size_t len) {
 
   E.row = realloc(E.row, sizeof(erow) * (E.number_of_rows + 1));
   memmove(&E.row[at + 1], &E.row[at], sizeof(erow) * (E.number_of_rows - at));
-  for (int j = at + 1; j <= E.number_of_rows; j++) E.row[j].idx++;
+  for (int j = at + 1; j <= E.number_of_rows; j++) E.row[j].index++;
 
-  E.row[at].idx = at;
+  E.row[at].index = at;
 
   E.row[at].size = len;
   E.row[at].characters = malloc(len + 1);
@@ -493,7 +493,7 @@ void editorDelRow(int at) {
   if (at < 0 || at >= E.number_of_rows) return;
   editorFreeRow(&E.row[at]);
   memmove(&E.row[at], &E.row[at + 1], sizeof(erow) * (E.number_of_rows - at - 1));
-  for (int j = at; j < E.number_of_rows - 1; j++) E.row[j].idx--;
+  for (int j = at; j < E.number_of_rows - 1; j++) E.row[j].index--;
   E.number_of_rows--;
   E.dirty++;
 }
