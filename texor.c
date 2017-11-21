@@ -271,7 +271,7 @@ void editorUpdateSyntax(erow *row) {
   int multiline_comment_start_length = multiline_comment_start ? strlen(multiline_comment_start) : 0;
   int multiline_comment_end_length = multiline_comment_end ? strlen(multiline_comment_end) : 0;
 
-  int prev_sep = 1;
+  int previous_separator = 1;
   int in_string = 0;
   int in_comment = (row->idx > 0 && E.row[row->idx - 1].highlight_open_comment);
 
@@ -294,7 +294,7 @@ void editorUpdateSyntax(erow *row) {
           memset(&row->highlight[i], HL_MLCOMMENT, multiline_comment_end_length);
           i += multiline_comment_end_length;
           in_comment = 0;
-          prev_sep = 1;
+          previous_separator = 1;
           continue;
         } else {
           i++;
@@ -318,7 +318,7 @@ void editorUpdateSyntax(erow *row) {
         }
         if (c == in_string) in_string = 0;
         i++;
-        prev_sep = 1;
+        previous_separator = 1;
         continue;
       } else {
         if (c == '"' || c == '\'') {
@@ -331,15 +331,15 @@ void editorUpdateSyntax(erow *row) {
     }
 
     if (E.syntax->flags & HL_HIGHLIGHT_NUMBERS) {
-      if ((isdigit(c) && (prev_sep || prev_highlight == HL_NUMBER)) || (c == '.' && prev_highlight == HL_NUMBER)) {
+      if ((isdigit(c) && (previous_separator || prev_highlight == HL_NUMBER)) || (c == '.' && prev_highlight == HL_NUMBER)) {
         row->highlight[i] = HL_NUMBER;
         i++;
-        prev_sep = 0;
+        previous_separator = 0;
         continue;
       }
     }
 
-    if (prev_sep) {
+    if (previous_separator) {
       int j;
       for (j = 0; keywords[j]; j++) {
         int klen = strlen(keywords[j]);
@@ -354,12 +354,12 @@ void editorUpdateSyntax(erow *row) {
         }
       }
       if (keywords[j] != NULL) {
-        prev_sep = 0;
+        previous_separator = 0;
         continue;
       }
     }
 
-    prev_sep = is_separator(c);
+    previous_separator = is_separator(c);
     i++;
   }
 
