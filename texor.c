@@ -79,7 +79,7 @@ struct editorConfig {
   int screen_position_x;
   int row_offset;
   int column_offset;
-  int screenrows;
+  int screen_rows;
   int screencols;
   int numrows;
   erow *row;
@@ -746,8 +746,8 @@ void editorScroll() {
   if (E.file_position_y < E.row_offset) {
     E.row_offset = E.file_position_y;
   }
-  if (E.file_position_y >= E.row_offset + E.screenrows) {
-    E.row_offset = E.file_position_y - E.screenrows + 1;
+  if (E.file_position_y >= E.row_offset + E.screen_rows) {
+    E.row_offset = E.file_position_y - E.screen_rows + 1;
   }
   if (E.screen_position_x < E.column_offset) {
     E.column_offset = E.screen_position_x;
@@ -759,10 +759,10 @@ void editorScroll() {
 
 void editorDrawRows(struct abuf *ab) {
   int y;
-  for (y = 0; y < E.screenrows; y++) {
+  for (y = 0; y < E.screen_rows; y++) {
     int filerow = y + E.row_offset;
     if (filerow >= E.numrows ) {
-      if (E.numrows == 0 && y == E.screenrows / 3) {
+      if (E.numrows == 0 && y == E.screen_rows / 3) {
         char welcome[80];
 
         int welcomelen = snprintf(welcome, sizeof(welcome),
@@ -1016,11 +1016,11 @@ void editorProcessKeypress() {
         if (c == PAGE_UP) {
           E.file_position_y = E.row_offset;
         } else if (c == PAGE_DOWN) {
-          E.file_position_y = E.row_offset + E.screenrows - 1;
+          E.file_position_y = E.row_offset + E.screen_rows - 1;
           if (E.file_position_y > E.numrows) E.file_position_y = E.numrows;
         }
 
-        int times = E.screenrows;
+        int times = E.screen_rows;
         while(times--)
           editorMoveCursor(c == PAGE_UP? ARROW_UP : ARROW_DOWN);
       }
@@ -1061,8 +1061,8 @@ void initEditor() {
   E.statusmsg_time = 0;
   E.syntax = NULL;
 
-  if (getWindowSize(&E.screenrows, &E.screencols) == -1) die("getWindowSize");
-  E.screenrows -= 2;
+  if (getWindowSize(&E.screen_rows, &E.screencols) == -1) die("getWindowSize");
+  E.screen_rows -= 2;
 }
 
 int main(int argc, char *argv[]) {
