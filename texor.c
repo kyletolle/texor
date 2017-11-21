@@ -80,7 +80,7 @@ struct editorConfig {
   int row_offset;
   int column_offset;
   int screen_rows;
-  int screencols;
+  int screen_columns;
   int numrows;
   erow *row;
   int dirty;
@@ -752,8 +752,8 @@ void editorScroll() {
   if (E.screen_position_x < E.column_offset) {
     E.column_offset = E.screen_position_x;
   }
-  if (E.screen_position_x >= E.column_offset + E.screencols) {
-    E.column_offset = E.screen_position_x - E.screencols + 1;
+  if (E.screen_position_x >= E.column_offset + E.screen_columns) {
+    E.column_offset = E.screen_position_x - E.screen_columns + 1;
   }
 }
 
@@ -767,8 +767,8 @@ void editorDrawRows(struct abuf *ab) {
 
         int welcomelen = snprintf(welcome, sizeof(welcome),
             "Texor editor -- version %s", TEXOR_VERSION);
-        if (welcomelen > E.screencols) welcomelen = E.screencols;
-        int padding = (E.screencols - welcomelen) / 2;
+        if (welcomelen > E.screen_columns) welcomelen = E.screen_columns;
+        int padding = (E.screen_columns - welcomelen) / 2;
         if (padding) {
           abAppend(ab, "~", 2);
           padding--;
@@ -781,7 +781,7 @@ void editorDrawRows(struct abuf *ab) {
     } else {
       int len = E.row[filerow].rsize - E.column_offset;
       if (len < 0) len = 0;
-      if (len > E.screencols) len = E.screencols;
+      if (len > E.screen_columns) len = E.screen_columns;
       char *c = &E.row[filerow].render[E.column_offset];
       unsigned char *highlight = &E.row[filerow].highlight[E.column_offset];
       int current_color = -1;
@@ -831,10 +831,10 @@ void editorDrawStatusBar(struct abuf *ab) {
   int rlen = snprintf(rstatus, sizeof(rstatus), "%s | %d/%d",
       E.syntax ? E.syntax->filetype : "no ft",
       E.file_position_y + 1, E.numrows);
-  if (len > E.screencols) len = E.screencols;
+  if (len > E.screen_columns) len = E.screen_columns;
   abAppend(ab, status, len);
-  while (len < E.screencols) {
-    if (E.screencols - len == rlen) {
+  while (len < E.screen_columns) {
+    if (E.screen_columns - len == rlen) {
       abAppend(ab, rstatus, rlen);
       break;
     } else {
@@ -849,7 +849,7 @@ void editorDrawStatusBar(struct abuf *ab) {
 void editorDrawMessageBar(struct abuf *ab) {
   abAppend(ab, "\x1b[K", 3);
   int msglen = strlen(E.statusmsg);
-  if (msglen > E.screencols) msglen = E.screencols;
+  if (msglen > E.screen_columns) msglen = E.screen_columns;
   if (msglen && time(NULL) - E.statusmsg_time < 5)
     abAppend(ab, E.statusmsg, msglen);
 }
@@ -1061,7 +1061,7 @@ void initEditor() {
   E.statusmsg_time = 0;
   E.syntax = NULL;
 
-  if (getWindowSize(&E.screen_rows, &E.screencols) == -1) die("getWindowSize");
+  if (getWindowSize(&E.screen_rows, &E.screen_columns) == -1) die("getWindowSize");
   E.screen_rows -= 2;
 }
 
